@@ -1,0 +1,511 @@
+<div class="container" id="userpage">
+    <div class="row mb-2 mt-2 text-center">
+      <div class="col-md-4">
+      </div>
+      <div class="col-md-4">
+        <h2>Voli Italia</h2>
+      </div>
+      <div class="col-md-4">
+      </div>
+    </div>
+  
+    <!-- nav bar -->
+    <nav class="navbar navbar-expand-md breadcrumb">
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="nav nav-pills">
+          <a class="nav-item nav-link active ml-1" data-toggle="tab" href="#search">
+            <i class="fa fa-search"></i>
+            Ricerca Voli
+          </a>
+          <a class="nav-item nav-link mr-3"  data-toggle="tab" href="#profile">
+            Profilo
+            <i class="fa fa-user"></i>
+          </a>
+          <a class="btn btn-secondary move-right mr-3" role="button" data-toggle="tab" (click)="onLogOut()">
+            Log out
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="tab-content mt-3" id="myTabContent">
+        <div class="tab-pane fade show active" id="search">
+            <div class="mb-3 float-left">
+              <div class="btn-group mr-2">
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#searchModal">
+                  <i class="fa fa-search"></i>Ricerca 
+                </button>
+              </div>
+              <div class="btn-group">
+                <button type="button" (click)="refresh('direct')" class="btn btn-info">
+                  <i *ngIf="refreshing" class="fas fa-sync fa-spin"></i><i *ngIf="!refreshing" class="fas fa-sync"></i>
+                </button>
+              </div>
+            </div>
+
+        
+            <ul class="nav nav-pills justify-content-center">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" aria-current="page" href="#voliDiretti" id="direct" (click)="refresh('direct')">Voli diretti</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#voliConScalo" id="single" (click)="refresh('single')">Voli con singolo scalo</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#voliConDoppioScalo" id="double" (click)="refresh('double')">Voli con doppio scalo</a>
+                </li>
+            </ul>
+              
+
+
+            <div class="tab-content mt-3" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="voliDiretti" >
+                    <div *ngIf="!paginaVoliDiretti && voloCorrente">{{messaggiErrore[0]}}</div>
+                    <div *ngIf="paginaVoliDiretti && paginaVoliDiretti.numPagine === 0">Nessun volo diretto presente per i parametri specificati</div>
+                    <div *ngIf="paginaVoliDiretti && paginaVoliDiretti.numPagine > 0">
+                        <table class="table table-hover">
+                            <thead class="table-borderless">
+                              <tr class="text-center">
+                                <th>Id Volo</th>
+                                <th>Aeroporto partenza</th>
+                                <th>Aeroporto arrivo</th>
+                                <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data partenza</th>
+                                <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Arrivo</th>
+                                <th>Compagnia Aerea</th>
+                                <th>Prezzo</th>
+                                <th>Biglietti Disponibili</th>
+                                <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Scadenza Prenotazione</th>
+                              </tr>
+                            </thead>
+                            <tbody *ngFor="let volo of paginaVoliDiretti.elementi; let in=index">
+                              <tr class="text-center">
+                                <td (click)="dettagliVolo(volo)">{{volo[0].id}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].aeroportoPartenza.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].aeroportoDestinazione.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].dataPartenza}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].dataDestinazione}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].compagniaAerea.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].prezzoBiglietto}}€</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].numBigliettiDisponibili}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].scadenzaPrenotazione}}</td>
+                                <td class="">
+                                  <div class="btn-group">
+                                    <button class="btn btn-outline-info" (click)="prenota(in,volo)"><i class="fa fa-shopping-cart"></i></button>
+                                    
+                                  </div>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <div *ngIf="paginaVoliDiretti.numPagine > 1">
+                            <nav aria-label="Page navigation example">
+                              <ul class="pagination justify-content-center">
+                                <li class="page-item" [ngClass]=" pagineCorrenti[0] === 0 ? 'disabled' : '' ">
+                                  <a class="page-link" aria-label="Previous" (click)="ottieniVoliDiretti(pagineCorrenti[0]-1)">
+                                    <span aria-hidden="true">&laquo;</span>
+                                  </a>
+                                </li>
+                                <li class="page-item" *ngFor="let number of [].constructor(paginaVoliDiretti.numPagine); let i = index" [ngClass]=" i === pagineCorrenti[0] ? 'active' : '' ">
+                                  <a class="page-link" (click)="ottieniVoliDiretti(i)">{{i+1}}
+                                  </a>
+                                </li>
+                                <li class="page-item" [ngClass]=" pagineCorrenti[0] === (paginaVoliDiretti.numPagine - 1) ? 'disabled' : '' ">
+                                  <a class="page-link" aria-label="Next" (click)="ottieniVoliDiretti(pagineCorrenti[0]+1)">
+                                    <span aria-hidden="true">&raquo;</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </nav>
+                          </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="voliConScalo" >
+                    <div *ngIf="!paginaVoliConSingoloScalo && voloCorrente">{{messaggiErrore[1]}}</div>
+                    <div *ngIf="paginaVoliConSingoloScalo && paginaVoliConSingoloScalo.numPagine === 0">Nessun volo con singolo scalo presente per i parametri specificati</div>
+                    <div *ngIf="paginaVoliConSingoloScalo && paginaVoliConSingoloScalo.numPagine > 0">
+                        <table class="table table-hover">
+                            <thead class="table-borderless">
+                              <tr class="text-center">
+                                <th>Aeroporto partenza</th>
+                                <th>Aeroporto arrivo</th>
+                                <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data partenza</th>
+                                <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Arrivo</th>
+                                <th>Compagnia Aerea</th>
+                                <th>Prezzo</th>
+                              </tr>
+                            </thead>
+                            <tbody *ngFor="let volo of paginaVoliConSingoloScalo.elementi;let in=index">
+                              <tr class="text-center">
+                                <td (click)="dettagliVolo(volo)">{{volo[0].aeroportoPartenza.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[volo.length-1].aeroportoDestinazione.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].dataPartenza}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[volo.length-1].dataDestinazione}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].compagniaAerea.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].prezzoBiglietto+volo[1].prezzoBiglietto}}€</td>
+                                <td class="">
+                                  <div class="btn-group">
+                                    <button class="btn btn-outline-info" (click)="prenota(in,volo)"><i class="fa fa-shopping-cart"></i></button>
+                                    
+                                  </div>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <div *ngIf="paginaVoliConSingoloScalo.numPagine > 1">
+                            <nav aria-label="Page navigation example">
+                              <ul class="pagination justify-content-center">
+                                <li class="page-item" [ngClass]=" pagineCorrenti[1] === 0 ? 'disabled' : '' ">
+                                  <a class="page-link"  aria-label="Previous" (click)="ottieniVoliConScalo(pagineCorrenti[1]-1)" >
+                                    <span aria-hidden="true">&laquo;</span>
+                                  </a>
+                                </li>
+                                <li class="page-item" *ngFor="let number of [].constructor(paginaVoliConSingoloScalo.numPagine); let i = index" [ngClass]=" i === pagineCorrenti[1] ? 'active' : '' ">
+                                  <a class="page-link" (click)="ottieniVoliConScalo(i)">{{i+1}}
+                                  </a>
+                                </li>
+                                <li class="page-item" [ngClass]=" pagineCorrenti[1] === (paginaVoliConSingoloScalo.numPagine - 1) ? 'disabled' : '' ">
+                                  <a class="page-link" aria-label="Next" (click)="ottieniVoliConScalo(pagineCorrenti[1]+1)">
+                                    <span aria-hidden="true">&raquo;</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </nav>
+                          </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="voliConDoppioScalo">
+                    <div *ngIf="!paginaVoliConDoppioScalo && voloCorrente">{{messaggiErrore[2]}}</div>
+                    <div *ngIf="paginaVoliConDoppioScalo && paginaVoliConDoppioScalo.numPagine === 0">Nessun volo con doppio scalo presente per i parametri specificati</div>
+                    <div *ngIf="paginaVoliConDoppioScalo && paginaVoliConDoppioScalo.numPagine > 0">
+                        <table class="table table-hover">
+                            <thead class="table-borderless">
+                              <tr class="text-center">
+                                <th>Aeroporto partenza</th>
+                                <th>Aeroporto arrivo</th>
+                                <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data partenza</th>
+                                <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Arrivo</th>
+                                <th>Compagnia Aerea</th>
+                                <th>Prezzo</th>
+                              </tr>
+                            </thead>
+                            <tbody *ngFor="let volo of paginaVoliConDoppioScalo.elementi;let in=index">
+                              <tr class="text-center">
+                                <td (click)="dettagliVolo(volo)">{{volo[0].aeroportoPartenza.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[volo.length-1].aeroportoDestinazione.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].dataPartenza}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[volo.length-1].dataDestinazione}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].compagniaAerea.nome}}</td>
+                                <td (click)="dettagliVolo(volo)">{{volo[0].prezzoBiglietto+volo[1].prezzoBiglietto+volo[2].prezzoBiglietto}}€</td>
+                                <td class="">
+                                  <div class="btn-group">
+                                    <button class="btn btn-outline-info" (click)="prenota(in,volo)"><i class="fa fa-shopping-cart"></i></button>
+                                    
+                                  </div>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <div *ngIf="paginaVoliConDoppioScalo.numPagine > 1">
+                            <nav aria-label="Page navigation example">
+                              <ul class="pagination justify-content-center">
+                                <li class="page-item" [ngClass]=" pagineCorrenti[2] === 0 ? 'disabled' : '' ">
+                                  <a class="page-link" aria-label="Previous" (click)="ottieniVoliConDoppioScalo(pagineCorrenti[2]-1)" >
+                                    <span aria-hidden="true">&laquo;</span>
+                                  </a>
+                                </li>
+                                <li class="page-item" *ngFor="let number of [].constructor(paginaVoliConDoppioScalo.numPagine); let i = index" [ngClass]=" i === pagineCorrenti[2] ? 'active' : '' ">
+                                  <a class="page-link" (click)="ottieniVoliConDoppioScalo(i)">{{i+1}}
+                                  </a>
+                                </li>
+                                <li class="page-item" [ngClass]=" pagineCorrenti[2] === (paginaVoliConDoppioScalo.numPagine - 1) ? 'disabled' : '' ">
+                                  <a class="page-link" aria-label="Next" (click)="ottieniVoliConDoppioScalo(pagineCorrenti[2]+1)">
+                                    <span aria-hidden="true">&raquo;</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </nav>
+                          </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#detailsModal" style="display: none;" id="details-open"></button>
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#prenotaModal" style="display: none;" id="prenota-open"></button>
+
+
+        </div>
+        <div class="tab-pane fade" id="profile">
+            <div class="mb-3 float left">
+                <div class="accordion" id="accordionExample">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#datiPersonali" aria-expanded="true" aria-controls="datiPersonali">
+                          Dati personali
+                        </button>
+                      </h2>
+                      <div id="datiPersonali" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                            <div class="card" style="width: 18rem;">
+                                <ul class="list-group list-group-flush">
+                                  <li class="list-group-item">Nome : {{utente.nome}}</li>
+                                  <li class="list-group-item">Cognome : {{utente.cognome}}</li>
+                                  <li class="list-group-item">Username : {{utente.username}}</li>
+                                </ul>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mieiBiglietti" aria-expanded="false" aria-controls="mieiBiglietti" (click)="refresh('biglietti')">
+                          I miei biglietti
+                        </button>
+                      </h2>
+                      <div id="mieiBiglietti" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                            <div *ngIf="!biglietti || biglietti.elementi.length===0">
+                                <h5>Nessun biglietto presente</h5>
+                            </div>
+                            <div *ngIf="biglietti && biglietti.elementi.length>0">
+                                <table class="table table-hover">
+                                    <thead class="table-borderless">
+                                      <tr class="text-center">
+                                        <th>Aeroporto partenza</th>
+                                        <th>Aeroporto arrivo</th>
+                                        <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data partenza</th>
+                                        <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Arrivo</th>
+                                        <th>Compagnia Aerea</th>
+                                        <th>Dettagli</th>
+                                        <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Acquisto</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody *ngFor="let biglietto of biglietti.elementi">
+                                      <tr class="text-center">
+                                        <td>{{biglietto.volo.aeroportoPartenza.nome}}</td>
+                                        <td>{{biglietto.volo.aeroportoDestinazione.nome}}</td>
+                                        <td>{{biglietto.volo.dataPartenza}}</td>
+                                        <td>{{biglietto.volo.dataDestinazione}}</td>
+                                        <td>{{biglietto.volo.compagniaAerea.nome}}</td>
+                                        <td>{{biglietto.dettagli}}</td>
+                                        <td>{{biglietto.dataAcquisto}}</td>
+                                      </tr>
+                                    </tbody>
+                                </table>
+                                <div *ngIf="biglietti.numPagine > 1">
+                                  <nav aria-label="Page navigation 3">
+                                    <ul class="pagination justify-content-center">
+                                      <li class="page-item" [ngClass]=" (pagineCorrenti[3]) === 0 ? 'disabled' : '' ">
+                                        <a class="page-link" aria-label="Previous" (click)="ottieniBiglietti(pagineCorrenti[3]-1)">
+                                          <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                      </li>
+                                      <li class="page-item" *ngFor="let number of [].constructor(biglietti.numPagine); let i = index" [ngClass]=" i === pagineCorrenti[3] ? 'active' : '' ">
+                                        <a class="page-link" (click)="ottieniBiglietti(i)">{{i+1}}
+                                        </a>
+                                      </li>
+                                      <li class="page-item" [ngClass]=" pagineCorrenti[3] === (biglietti.numPagine - 1) ? 'disabled' : '' ">
+                                        <a class="page-link" aria-label="Next" (click)="ottieniBiglietti(pagineCorrenti[3]+1)" >
+                                          <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </nav>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mieiViaggi" aria-expanded="false" aria-controls="mieiViaggi" (click)="refresh('viaggi')">
+                            I miei viaggi
+                          </button>
+                        </h2>
+                        <div id="mieiViaggi" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                          <div class="accordion-body">
+                              <div *ngIf="!viaggi || viaggi.elementi.length===0">
+                                  <h5>Nessun viaggio presente</h5>
+                              </div>
+                              <div *ngIf="viaggi && viaggi.elementi.length>0">
+                                  <table class="table table-hover">
+                                      <thead class="table-borderless">
+                                        <tr class="text-center">
+                                          <th>Aeroporto partenza</th>
+                                          <th>Aeroporto arrivo</th>
+                                          <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data partenza</th>
+                                          <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Arrivo</th>
+                                          <th>Compagnia Aerea</th>
+                                          <th>Dettagli</th>
+                                          <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Acquisto</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody *ngFor="let viaggio of viaggi.elementi">
+                                        <tr class="text-center">
+                                          <td>{{viaggio.volo.aeroportoPartenza.nome}}</td>
+                                          <td>{{viaggio.volo.aeroportoDestinazione.nome}}</td>
+                                          <td>{{viaggio.volo.dataPartenza}}</td>
+                                          <td>{{viaggio.volo.dataDestinazione}}</td>
+                                          <td>{{viaggio.volo.compagniaAerea.nome}}</td>
+                                          <td>{{viaggio.dettagli}}</td>
+                                          <td>{{viaggio.dataAcquisto}}</td>
+                                        </tr>
+                                      </tbody>
+                                  </table>
+                                  <div *ngIf="viaggi.numPagine > 1">
+                                    <nav aria-label="Page navigation example">
+                                      <ul class="pagination justify-content-center">
+                                        <li class="page-item" [ngClass]=" pagineCorrenti[4] === 0 ? 'disabled' : '' ">
+                                          <a class="page-link" aria-label="Previous" (click)="ottieniViaggi(pagineCorrenti[4]-1)">
+                                            <span aria-hidden="true">&laquo;</span>
+                                          </a>
+                                        </li>
+                                        <li class="page-item" *ngFor="let number of [].constructor(viaggi.numPagine); let i = index" [ngClass]=" i === pagineCorrenti[4] ? 'active' : '' ">
+                                          <a class="page-link" (click)="ottieniViaggi(i)">{{i+1}}
+                                          </a>
+                                        </li>
+                                        <li class="page-item" [ngClass]=" pagineCorrenti[4] === (viaggi.numPagine - 1) ? 'disabled' : '' ">
+                                          <a class="page-link" aria-label="Next" (click)="ottieniViaggi(pagineCorrenti[4]+1)">
+                                            <span aria-hidden="true">&raquo;</span>
+                                          </a>
+                                        </li>
+                                      </ul>
+                                    </nav>
+                                  </div>
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+     <!-- model search -->
+     <div class="modal draggable fade bd-example-modal-lg" id="searchModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+     <div class="modal-dialog" role="document">
+       <div class="modal-content">
+         <div class="modal-header">
+           <h5 class="modal-title text-center">Ricerca Voli</h5>
+         </div>
+         <div class="modal-body">
+           <div>
+             <form #searchForm="ngForm" (ngSubmit)="onGetVoli(searchForm)">
+               <div class="form-group">
+                 <label for="nomeCompagnia">Nome Compagnia Aerea</label>
+                 <input type="text" name="nomeCompagnia" ngModel class="form-control">
+               </div>
+               <div class="form-group">
+                 <label for="dataPartenza">Data Partenza</label>
+                 <input type="date" name="dataPartenza"  ngModel class="form-control">
+               </div>
+               <div class="form-group">
+                 <label for="prezzoBiglietto">Prezzo Massimo</label>
+                 <input type="number" name="prezzoBiglietto" ngModel class="form-control">
+               </div>
+               <div class="form-group">
+                <label for="cittaPartenza">Citta Partenza</label>
+                <ng-selectize [options]="citta" [config]="config" [(ngModel)]="cittaPartenza" (ngModelChange)="cambioOpzione($event)" ngModel name="cittaPartenza">
+                </ng-selectize>
+              </div>
+              <div class="form-group">
+               <label for="cittaDestinazione">Citta Destinazione</label>
+               <ng-selectize [options]="citta" [config]="config" [(ngModel)]="cittaDestinazione" (ngModelChange)="cambioOpzione($event)" ngModel name="cittaDestinazione">
+               </ng-selectize>
+             </div>
+               <button type="submit" style="display: none;" id="ricerca-submit"></button>
+             </form>
+           </div>
+         </div>
+         <div class="modal-footer">
+           <button type="button" class="btn btn-secondary" data-dismiss="modal" id="search-close">Chiudi</button>
+           <button type="button" (click)="ricercaVoli()" [disabled]="searchForm.invalid" class="btn btn-primary">Cerca</button>
+         </div>
+       </div>
+     </div>
+     </div>
+
+    <!-- model details -->
+    <div class="modal draggable fade bd-example-modal-lg" id="detailsModal" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-center">Dettagli Volo</h5>
+            </div>
+            <div class="modal-body">
+                <div *ngFor="let v of voliSelezionati; let i=index">     
+                    <h2>{{i+1}}<sup>o</sup> Volo</h2>
+                    <ul class="list-group">
+                        <li class="list-group-item">Id Volo : {{v.id}}</li>
+                        <li class="list-group-item">Aeroporto partenza : {{v.aeroportoPartenza.nome}}</li>
+                        <li class="list-group-item">Aeroporto destinazione : {{v.aeroportoDestinazione.nome}}</li>
+                        <li class="list-group-item">Data partenza : {{v.dataPartenza}}</li>
+                        <li class="list-group-item">Data arrivo : {{v.dataDestinazione}}</li>
+                        <li class="list-group-item">Prezzo biglietto : {{v.prezzoBiglietto}}€</li>
+                        <li class="list-group-item">Biglietti disponibili : {{v.numBigliettiDisponibili}}</li>
+                        <li class="list-group-item">Scadenza prenotazione : {{v.scadenzaPrenotazione}}</li>
+                        <li class="list-group-item" *ngIf="i!==voliSelezionati.length-1">
+                            <i class="fa fa-arrow-down" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <i class="fa fa-arrow-down" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <i class="fa fa-arrow-down" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <i class="fa fa-arrow-down" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <i class="fa fa-arrow-down" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <i class="fa fa-arrow-down" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <i class="fa fa-arrow-down" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>
+            </div>
+            </div>
+        </div>
+    </div>    
+
+
+    <!-- model prenota -->
+    <div class="modal draggable fade bd-example-modal-lg" id="prenotaModal" tabindex="-1" role="dialog"
+    aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h3 class="modal-title text-center">Prenotazione Volo/Voli</h3><br>
+            <h5 class="modal-title text-center">Inserire dati carta di credito</h5>
+            </div>
+            <div class="modal-body">
+            <div>
+                <form #prenotaForm="ngForm" (ngSubmit)="onPrenota(prenotaForm)">
+                <div class="form-group">
+                    <label for="nome">Nome Intestatario</label>
+                    <input type="text" name="nome" ngModel class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="cognome">Cognome Intestatario</label>
+                    <input type="text" name="cognome"  ngModel class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="numeroCarta">Numero Carta</label>
+                    <input type="text" name="numeroCarta" ngModel class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="codiceSicurezza">Codice Sicurezza a 3 cifre</label>
+                    <input type="text" name="codiceSicurezza" ngModel class="form-control" required>
+                </div>
+                <button type="submit" style="display: none;" id="prenota-submit"></button>
+                </form>
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" id="prenota-close">Chiudi</button>
+            <button type="button" (click)="prenotaVoli()" [disabled]="prenotaForm.invalid" class="btn btn-primary">Prenota</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+</div>    

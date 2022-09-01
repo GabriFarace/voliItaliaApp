@@ -1,1 +1,17 @@
 /* You can add global styles to this file, and also import other style files */
+@import 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css';
+@import "~angular-notifier/styles";
+@import 'https://use.fontawesome.com/releases/v5.8.1/css/all.css';
+
+
+td {
+    cursor: pointer;
+}
+.move-right{
+    position : absolute;
+    right : 0;
+}
+.move-leftt{
+    position : absolute;
+    left : 0;
+}

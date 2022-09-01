@@ -1,0 +1,282 @@
+<div class="container" id="userpage">
+    <div class="row mb-2 mt-2 text-center">
+      <div class="col-md-4">
+      </div>
+      <div class="col-md-4">
+        <h2>Voli Italia</h2>
+      </div>
+      <div class="col-md-4">
+      </div>
+    </div>
+  
+    <!-- nav bar -->
+    <nav class="navbar navbar-expand-md breadcrumb">
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="nav nav-pills">
+          <a class="nav-item nav-link active ml-1" data-toggle="tab" href="#gestioneVoli">
+            <i class="fa fa-plane"></i>
+            Gestione Voli
+          </a>
+          <a class="btn btn-secondary move-right mr-3" role="button" data-toggle="tab" (click)="onLogOut()">
+            Log out
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="tab-content mt-3" id="myTabContent">
+        <div class="tab-pane fade show active" id="gestioneVoli">
+            <div class="mb-3 float-left">
+              <div class="btn-group mr-2">
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#addModal">
+                  <i class="fa fa-plus"></i>Aggiungi 
+                </button>
+              </div>
+            </div>
+
+            <div class="mb-3 float right">
+                <div class="accordion" id="accordionExample">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#datiPersonali" aria-expanded="true" aria-controls="datiPersonali">
+                          Dati Compagnia
+                        </button>
+                      </h2>
+                      <div id="datiPersonali" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                            <div class="card" style="width: 18rem;">
+                                <ul class="list-group list-group-flush">
+                                  <li class="list-group-item">Nome : {{compagnia.nome}}</li>
+                                  <li class="list-group-item">Nazione : {{compagnia.nazione}}</li>
+                                  <li class="list-group-item">Sede : {{compagnia.sede}}</li>
+                                  <li class="list-group-item">Username : {{compagnia.username}}</li>
+                                </ul>
+                            </div>
+                        </div>
+                      </div>
+                </div>
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#voliNonPartiti" aria-expanded="false" aria-controls="voliNonPartiti" (click)="ottieniVoliNonPartiti(0)">
+                          Prossimi Voli
+                        </button>
+                      </h2>
+                      <div id="voliNonPartiti" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                            <div *ngIf="!paginaVoliNonPartiti || paginaVoliNonPartiti.elementi.length===0">
+                                <h5>Nessun Volo prossimo presente</h5>
+                            </div>
+                            <div *ngIf="paginaVoliNonPartiti && paginaVoliNonPartiti.elementi.length>0">
+                                <table class="table table-hover">
+                                    <thead class="table-borderless">
+                                      <tr class="text-center">
+                                        <th>Id Volo</th>
+                                        <th>Aeroporto partenza</th>
+                                        <th>Aeroporto arrivo</th>
+                                        <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data partenza</th>
+                                        <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Arrivo</th>
+                                        <th>Posti totali</th>
+                                        <th>Biglietti venduti</th>
+                                        <th>Prezzo corrente</th>
+                                        <th>Incasso corrente</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody *ngFor="let volo of paginaVoliNonPartiti.elementi;let in = index">
+                                      <tr class="text-center">
+                                        <td>{{volo.id}}</td>
+                                        <td>{{volo.aeroportoPartenza.nome}}</td>
+                                        <td>{{volo.aeroportoDestinazione.nome}}</td>
+                                        <td>{{volo.dataPartenza}}</td>
+                                        <td>{{volo.dataDestinazione}}</td>
+                                        <td>{{volo.numPosti}}</td>
+                                        <td>{{volo.numPosti-volo.numBigliettiDisponibili}}</td>
+                                        <td>{{volo.prezzoBiglietto}}€</td>
+                                        <td>{{volo.incasso}}€</td>
+                                        <td class="">
+                                            <div class="btn-group">
+                                              <button class="btn btn-outline-info" (click)="modificaVolo(in)"><i class="fa fa-mouse-pointer"></i></button>
+                                              
+                                            </div>
+                                          </td>
+                                      </tr>
+                                    </tbody>
+                                </table>
+                                <div *ngIf="paginaVoliNonPartiti.numPagine > 1">
+                                    <nav aria-label="Page navigation example">
+                                      <ul class="pagination justify-content-center">
+                                        <li class="page-item" [ngClass]=" pagineCorrenti[0] === 0 ? 'disabled' : '' ">
+                                          <a class="page-link" aria-label="Previous" (click)="ottieniVoliNonPartiti(pagineCorrenti[0]-1)">
+                                            <span aria-hidden="true">&laquo;</span>
+                                          </a>
+                                        </li>
+                                        <li class="page-item" *ngFor="let number of [].constructor(paginaVoliNonPartiti.numPagine); let i = index" [ngClass]=" i === pagineCorrenti[0] ? 'active' : '' ">
+                                          <a class="page-link" (click)="ottieniVoliNonPartiti(i)">{{i+1}}
+                                          </a>
+                                        </li>
+                                        <li class="page-item" [ngClass]=" pagineCorrenti[0] === (paginaVoliNonPartiti.numPagine - 1) ? 'disabled' : '' ">
+                                          <a class="page-link" aria-label="Next" (click)="ottieniVoliNonPartiti(pagineCorrenti[0]+1)">
+                                            <span aria-hidden="true">&raquo;</span>
+                                          </a>
+                                        </li>
+                                      </ul>
+                                    </nav>
+                                  </div>
+                            </div>
+                        </div>
+                      </div>
+                </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#voliPartiti" aria-expanded="false" aria-controls="voliPartiti" (click)="ottieniVoliPartiti(0)">
+                            Voli Scaduti
+                          </button>
+                        </h2>
+                        <div id="voliPartiti" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                          <div class="accordion-body">
+                              <div *ngIf="!paginaVoliPartiti || paginaVoliPartiti.elementi.length===0">
+                                  <h5>Nessun Volo scaduto presente</h5>
+                              </div>
+                              <div *ngIf="paginaVoliPartiti && paginaVoliPartiti.elementi.length>0">
+                                  <table class="table table-hover">
+                                      <thead class="table-borderless">
+                                        <tr class="text-center">
+                                          <th>Id Volo</th>
+                                          <th>Aeroporto partenza</th>
+                                          <th>Aeroporto arrivo</th>
+                                          <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data partenza</th>
+                                          <th data-type="date" data-format-string="yyyy-MM-dd HH:mm:ss">Data Arrivo</th>
+                                          <th>Posti totali</th>
+                                          <th>Biglietti totali venduti</th>
+                                          <th>Incasso totale</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody *ngFor="let volo of paginaVoliPartiti.elementi">
+                                        <tr class="text-center">
+                                          <td>{{volo.id}}</td>
+                                          <td>{{volo.aeroportoPartenza.nome}}</td>
+                                          <td>{{volo.aeroportoDestinazione.nome}}</td>
+                                          <td>{{volo.dataPartenza}}</td>
+                                          <td>{{volo.dataDestinazione}}</td>
+                                          <td>{{volo.numPosti}}</td>
+                                          <td>{{volo.numPosti-volo.numBigliettiDisponibili}}</td>
+                                          <td>{{volo.incasso}}€</td>
+                                        </tr>
+                                      </tbody>
+                                  </table>
+                                  <div *ngIf="paginaVoliPartiti.numPagine > 1">
+                                    <nav aria-label="Page navigation example">
+                                      <ul class="pagination justify-content-center">
+                                        <li class="page-item" [ngClass]=" pagineCorrenti[1] === 0 ? 'disabled' : '' ">
+                                          <a class="page-link" aria-label="Previous" (click)="ottieniVoliPartiti(pagineCorrenti[1]-1)">
+                                            <span aria-hidden="true">&laquo;</span>
+                                          </a>
+                                        </li>
+                                        <li class="page-item" *ngFor="let number of [].constructor(paginaVoliPartiti.numPagine); let i = index" [ngClass]=" i === pagineCorrenti[1] ? 'active' : '' ">
+                                          <a class="page-link" (click)="ottieniVoliPartiti(i)">{{i+1}}
+                                          </a>
+                                        </li>
+                                        <li class="page-item" [ngClass]=" pagineCorrenti[1] === (paginaVoliPartiti.numPagine - 1) ? 'disabled' : '' ">
+                                          <a class="page-link" aria-label="Next" (click)="ottieniVoliPartiti(pagineCorrenti[1]+1)">
+                                            <span aria-hidden="true">&raquo;</span>
+                                          </a>
+                                        </li>
+                                      </ul>
+                                    </nav>
+                                  </div>
+                              </div>
+                          </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#updateModal" style="display: none;" id="update-open"></button>
+
+
+    </div>
+
+
+     <!-- model add -->
+     <div class="modal draggable fade bd-example-modal-lg" id="addModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+     <div class="modal-dialog" role="document">
+       <div class="modal-content">
+         <div class="modal-header">
+           <h5 class="modal-title text-center">Aggiunta Volo</h5>
+         </div>
+         <div class="modal-body">
+           <div>
+             <form #aggiungiForm="ngForm" (ngSubmit)="aggiungiVolo(aggiungiForm)">
+                <div class="form-group">
+                    <label for="nomeAeroportoPartenza">Aeroporto Partenza</label>
+                    <ng-selectize [options]="nomiAeroporti" [config]="config" [(ngModel)]="nomeAeroportoPartenza" (ngModelChange)="cambioOpzione($event)" ngModel required name="cittaPartenza">
+                    </ng-selectize>
+                </div>
+                <div class="form-group">
+                    <label for="nomeAeroportoDestinazione">Aeroporto Destinazione</label>
+                    <ng-selectize [options]="nomiAeroporti" [config]="config" [(ngModel)]="nomeAeroportoDestinazione" (ngModelChange)="cambioOpzione($event)" ngModel required name="cittaDestinazione">
+                    </ng-selectize>
+                </div>
+                <div class="form-group">
+                    <label for="dataPartenza">Data Partenza</label>
+                    <input type="datetime-local" name="dataPartenza"  ngModel required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="dataDestinazione">Data Destinazione</label>
+                    <input type="datetime-local" name="dataDestinazione" ngModel required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="scadenzaPrenotazione">Data Scadenza Prenotazione</label>
+                    <input type="datetime-local" name="scadenzaPrenotazione" ngModel required class="form-control">
+                </div>
+               <div class="form-group">
+                <label for="numPosti">Numero di posti disponibili</label>
+                <input type="number" name="numPosti" ngModel required class="form-control">
+              </div>
+               <div class="form-group">
+                 <label for="prezzoBiglietto">Prezzo Biglietto Iniziale</label>
+                 <input type="number" name="prezzoBiglietto" ngModel required class="form-control">
+               </div>
+               <button type="submit" style="display: none;" id="aggiungi-submit"></button>
+             </form>
+           </div>
+         </div>
+         <div class="modal-footer">
+           <button type="button" class="btn btn-secondary" data-dismiss="modal" id="aggiungi-close">Chiudi</button>
+           <button type="button" (click)="addVolo()" [disabled]="aggiungiForm.invalid" class="btn btn-primary">Aggiungi Volo</button>
+         </div>
+       </div>
+     </div>
+     </div>
+
+
+
+
+    <!-- model cambia prezzo -->
+    <div class="modal draggable fade bd-example-modal-lg" id="updateModal" tabindex="-1" role="dialog"
+    aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h3 class="modal-title text-center">Cambia prezzo</h3><br>
+            </div>
+            <div class="modal-body">
+            <div>
+                <form #updateForm="ngForm" (ngSubmit)="cambiaPrezzo(updateForm)">
+                    <div class="form-group">
+                        <label for="nuovoPrezzo">Nuovo Prezzo</label>
+                        <input type="number" name="nuovoPrezzo" ngModel class="form-control" required>
+                    </div>
+                    <button type="submit" style="display: none;" id="update-submit"></button>
+                </form>
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" id="update-close">Chiudi</button>
+            <button type="button" (click)="cambia()" [disabled]="updateForm.invalid" class="btn btn-primary">Aggiorna Prezzo</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+</div>    
